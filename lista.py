@@ -1,5 +1,5 @@
 print("================================================================================")
-print("=             PYTHON v3.9                                                      =")
+print("=             PYTHON v3.7                                                      =")
 print("=             GRUPO B&K - MALA DIRETA                                          =")
 print("=             v1.0                                                             =")
 print("=             Github: https://github.com/masterfake2/mala-direta               =")
@@ -43,6 +43,7 @@ class Dados:
             excel_path = r"./dataset/base.xls"
             self.dataset = pd.read_excel(excel_path)
         except Exception as e:
+            print(e)
             return 4
 
     def procurarInformacao(self):
@@ -143,16 +144,6 @@ class Arquivos:
         self.caminho = self.diretorio_default + dadosPlanilha.devedor_nome + "/CONTRATOS/" + dadosPlanilha.devedor_nome + ".docx"
         self.caminho_pdf = self.diretorio_default + dadosPlanilha.devedor_nome + "/CONTRATOS/" 
         doc_path.save(self.caminho)
-        print("[SISTEMA] Caminho para o arquivo: {}".format(self.caminho))
-        configuration = cloudmersive_convert_api_client.Configuration()
-        configuration.api_key['Apikey'] = '5e1c7861-12ef-43ae-a5d7-6d21c0c52c3a'
-        api_instance = cloudmersive_convert_api_client.ConvertDocumentApi(cloudmersive_convert_api_client.ApiClient(configuration))
-        input_file = self.caminho
-        api_response = api_instance.convert_document_docx_to_pdf(input_file)
-        #Salvar como PDF
-        pdf = open(self.caminho_pdf + dadosPlanilha.devedor_nome + ".pdf", "wb")
-        pdf.write(api_response)
-        pdf.close()
         
 class Modelos:
     divida_montante_total = ""
