@@ -8,7 +8,11 @@ print("=========================================================================
 import os
 import pandas as pd
 from docxtpl import DocxTemplate
-from docx2pdf import convert
+import docx2pdf
+from datetime import datetime
+import cloudmersive_convert_api_client
+from cloudmersive_convert_api_client.rest import ApiException
+from pprint import pprint
 #Modelos - EXECUÇÃO DE TÍTULO EXECUTIVO DE COTAS CONDOMINIAIS
 #Modelos - CONTRATO DE RENEGOCIAÇÃO DE DÍVIDA
 
@@ -21,7 +25,6 @@ class Dados:
     #Dados devedor
     devedor_nome = ""
     devedor_cpf  = ""
- 
 
     #Dados Sindico
     sindico_nome = ""
@@ -59,7 +62,7 @@ class Dados:
         texto = "Encontrado" if len(self.row) <= 1 else "Encontrados"
         print("---- {} {} ---------".format(len(self.row), texto))
         print('---------------------------')
-        print("Nome: {}".format(self.row.get("NOME").values[0]))
+        print("Nome: {}".format(self.row.get("NOME").values[0]))    
         print("---------------------------")
 
     def setDados(self):
@@ -78,6 +81,37 @@ class Dados:
 
 class Arquivos:
     diretorio_default = r"./mala-direta-arquivos/"
+    agora = datetime.now()
+    ano   = agora.year
+    mes   = agora.month
+    dia   = agora.day
+
+    if(mes == 1):
+        mes = "Janeiro"
+    elif(mes == 2):
+        mes = "Fevereiro"
+    elif(mes == 3):
+        mes = "Março"
+    elif(mes == 4):
+        mes = "Abril"
+    elif(mes == 5):
+        mes = "Maio"
+    elif(mes == 6):
+        mes = "Junho"
+    elif(mes == 7):
+        mes = "Julho"
+    elif(mes == 8):
+        mes = "Agosto"
+    elif(mes == 9):
+        mes = "Setembro"
+    elif(mes == 10):
+        mes = "Outubro"
+    elif(mes == 11):
+        mes = "Novembro"
+    elif(mes == 12):
+        mes = "Dezembro"
+    
+    caminho = ""
     def criaDiretorio(self, nome):
         try:
             os.mkdir(self.diretorio_default + nome)
@@ -102,11 +136,23 @@ class Arquivos:
                     "residencial_residencial": dadosPlanilha.residencial_residencial, "residencial_cnpj": dadosPlanilha.residencial_cnpj, "divida_montante_total": dadosInputs.divida_montante_total,
                     "divida_referente_meses": dadosInputs.divida_referente_meses, "divida_entrada": dadosInputs.divida_entrada, "divida_data_pagamento_da_entrada": dadosInputs.divida_data_pagamento_da_entrada,
                     "divida_numero_de_parcelas": dadosInputs.divida_numero_de_parcelas, "divida_valor_parcelas": dadosInputs.divida_valor_parcelas, "divida_data_primeiro_pagamento_parcelas": dadosInputs.divida_data_primeiro_pagamento_parcelas,
-                    "divida_data_ultimo_pagamento_parcelas": dadosInputs.divida_data_ultimo_pagamento_parcelas
+                    "divida_data_ultimo_pagamento_parcelas": dadosInputs.divida_data_ultimo_pagamento_parcelas, "dia": self.dia, "mes": self.mes, "ano": self.ano
                     }
         doc_path = DocxTemplate(r"./dataset/contrato-modelo-renegociacao.docx")
         doc_path.render(contexto)
-        doc_path.save(self.diretorio_default + dadosPlanilha.devedor_nome + "/CONTRATOS/" + dadosPlanilha.devedor_nome + ".docx")
+        self.caminho = self.diretorio_default + dadosPlanilha.devedor_nome + "/CONTRATOS/" + dadosPlanilha.devedor_nome + ".docx"
+        self.caminho_pdf = self.diretorio_default + dadosPlanilha.devedor_nome + "/CONTRATOS/" 
+        doc_path.save(self.caminho)
+        print("[SISTEMA] Caminho para o arquivo: {}".format(self.caminho))
+        configuration = cloudmersive_convert_api_client.Configuration()
+        configuration.api_key['Apikey'] = '5e1c7861-12ef-43ae-a5d7-6d21c0c52c3a'
+        api_instance = cloudmersive_convert_api_client.ConvertDocumentApi(cloudmersive_convert_api_client.ApiClient(configuration))
+        input_file = self.caminho
+        api_response = api_instance.convert_document_docx_to_pdf(input_file)
+        #Salvar como PDF
+        pdf = open(self.caminho_pdf + dadosPlanilha.devedor_nome + ".pdf", "wb")
+        pdf.write(api_response)
+        pdf.close()
         
 class Modelos:
     divida_montante_total = ""
@@ -177,8 +223,8 @@ class Modelos:
 class Menu():
     def showMenu(self):
         print("\n1 - Contrato de renegociacao")
-        print("2 - Execusao de titulos")
-        print("3 - Consultar dados")
+        print("2 - Execusao de titulos *Desativado esperando validação")
+        print("3 - Consultar dados *Desativado esperando validação")
 
     def showErro(self):
         print("[SISTEMA] Erro, favor verificar valor digitado!\n")
@@ -202,8 +248,6 @@ class Menu():
                     pass #volta para o menu principal
             else: 
                 pass #volta para o menu principal
-        elif (opcao == 2): #Contrato de execusão
-            Modelos.setExecusaoDeTituloExecutivo()
         else:
             self.showErro()
 
